@@ -1,0 +1,78 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 100vh;
+    margin: 0;
+}
+
+#calculator-container {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #333333;
+
+    /* use arg1, unless arg2 is smaller */
+    width: min(900px, 95vw);
+    height: min(1800px, 95vh);
+}
+
+#display-container {
+    height: 20%;
+
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    align-items: center;
+    overflow: hidden;
+
+    border: 2px solid #000000;
+    outline: 1px solid #7fff0d;
+
+    font-family:"InputSans", "Akzidenz-Grotesk", "Helvetica", "sans-serif";
+    font-size: clamp(2rem, 8vw, 4rem);
+    /* Clamp is min size, preferred responsive size, max size*/
+}
+
+#interface {
+    height: 80%;
+    width: 100%;
+
+    display: flex;
+
+    flex: 1;
+}
+
+.button-container {
+    outline: 1px solid red;
+}
+
+#functions {
+    width: 15%;
+    display: flex;
+
+}
+
+#functions .func-button {
+    flex: 1;
+}
+
+#numpad {
+    width: 70%;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+}
+
+#operations {
+    outline: 1px solid #0743ff;
+
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+#operations .op-button {
+    flex: 1;
+}
