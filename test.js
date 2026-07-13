@@ -1,11 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
-import { operation } from './operations.js';
+import { operate } from './calculator.js';
 
-test('operate produce correct normal', () =>{
-    const equation = ['3','+','2','*','5','/','2'];
+test('operate produces correct result', () => {
+    const equation = ['3', '+', '2', '*', '5', '/', '2'];
+    const result = operate(equation);
+    assert.strictEqual(result, 8); // 2*5=10, 10/2=5, 3+5=8 (standard precedence)
+});
 
-    operate();
-})
-
-test('tokenize decimal')
+test('tokenize decimal', () => {
+    const equation = ['3', '.', '3'];
+    const result = operate(equation);
+    assert.strictEqual(result, 3.3);
+});

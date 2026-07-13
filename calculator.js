@@ -129,6 +129,14 @@ function allClear() {
 function equationToString(arr) {
     let equation = "";
     for (let symbol of arr) {
+        // ui purposes use the actual symbols for display
+        if (symbol === "/") {
+            equation += "÷";
+            continue;
+        } else if (symbol === "*") {
+            equation += "×";
+            continue;
+        }
         equation += symbol;
     }
 
@@ -175,7 +183,7 @@ function evalEquation(postfixQueue) {
  * This function assumes addSymbol has parsed VALID equations!
  * Uses the Shunting yard algorithm
  * @param {string[]} equationArr the equation stored as a string token array.
- * @return {number} result of the inputted equationArr
+ * @return {number} result of the inputted equationArr, or NaN on failure
  */
 function operate(equationArr) {
     console.log(equationArr);
@@ -237,7 +245,22 @@ function operate(equationArr) {
     // EVALUATE STEP: process the output queue, as a postfix expression
     const result = evalEquation(outputQueue);
 
-    console.log(`result: ${result}`);
+    if (isNaN(result)) {
+        // TODO: handle error case, maybe display error function
+    }   else {
+        // Updating the display for result
+        equationArr.length = 0;
+
+        // match the format of the displayEquation arr or else it breaks subsequent calculations
+        const resultString = String(result);
+        for (const char of resultString) {
+            equationArr.push(char);
+        }
+
+        // Store for subsequent calculations that may need it
+        prevResult = result;
+    }
+
     return result;
 }
 
@@ -249,6 +272,25 @@ function drawDisplay(displayElement) {
     if (displayElement === null) return;
 
     displayElement.textContent = equationToString(displayEquation);
+}
+
+/**
+ * Handles a button event
+ */
+function handleAction(action) {
+    action();
+    drawDisplay(display);
+}
+
+const keyAction = {
+    "+": () => handleAction( () => addSymbol("+")),
+    "-": () => handleAction( () => addSymbol("-")),
+    "/": () => handleAction( () => addSymbol("÷")),
+    "*": () => handleAction( () => addSymbol("×")),
+
+    "Enter": () => handleAction(() => operate(displayEquation)),
+    "Backspace": () => handleAction(clearEntry),
+    "Escape": () => handleAction(allClear)
 }
 
 function main() {
@@ -263,25 +305,7 @@ function main() {
         } else {
             /** Equals Button, Evaluates an expression */
             button.addEventListener("click", () => {
-
-                const result = operate(displayEquation);
-                if (isNaN(result)) {
-                    // TODO: handle error case, maybe display error function
-                }   else {
-                    // Updating the display for result
-                    displayEquation.length = 0;
-
-                    // match the format of the displayEquation arr or else it breaks subsequent calculations
-                    const resultString = String(result);
-                    for (const numChar of resultString) {
-                        displayEquation.push(numChar);
-                    }
-
-                    // Store for subsequent calculations that may need it
-                    prevResult = result;
-                }
-
-                drawDisplay(display);
+                handleAction(() => operate(displayEquation))
             });
         }
     }
@@ -302,10 +326,23 @@ function main() {
     const opContainer = document.querySelectorAll("#operations button");
     for (const opButton of opContainer) {
         opButton.addEventListener("click", () => {
-            addSymbol(opButton.textContent);
-            drawDisplay(display);
-        })
+                addSymbol(opButton.textContent);
+                drawDisplay(display);
+        });
     }
+
+    /* Keyboard support for calculator */
+    document.addEventListener("keydown", (e) => {
+        console.log(e.type);
+
+        if (isDigit(e.key)) {
+            addSymbol(e.key);
+            drawDisplay(display);
+        } else {
+            // Lookup table action
+            keyAction[e.key]?.();
+        }
+    });
 }
 
 main();
