@@ -18,10 +18,9 @@ const operatorSymbol = {
 const displayEquation = [];
 const display = document.querySelector("#display-container");
 
-/** Stores the previous result. NO previous result is always null */
-let prevResult = null;
 /** Decimal entered flag. Resets after each operator entered */
 let decimalEntered = false;
+let prevResult = null;
 
 /**
  * Helper Function: Verifies if a character is a digit or not. Uses regex
@@ -237,21 +236,9 @@ function operate(equationArr) {
 
     // EVALUATE STEP: process the output queue, as a postfix expression
     const result = evalEquation(outputQueue);
-    if (isNaN(result)) {
-        // [DISPLAY-ERROR] insert Display error function here
-        return NaN;
-    }
+
     console.log(`result: ${result}`);
-
     return result;
-}
-
-/**
- * Updates the result and previous result based on a calculation.
- * @param newResult
- */
-function updateResult(newResult) {
-
 }
 
 /**
@@ -275,7 +262,47 @@ function main() {
             });
         } else {
             // The equals button performs the operate function.
-            button.addEventListener("click", operate);
+            button.addEventListener("click", () => {
+
+                const result = operate(displayEquation);
+                if (isNaN(result)) {
+                    // TODO: handle error case, maybe display error function
+                } else {
+                    // Updating the display for result
+                    displayEquation.length = 0;
+
+                    // match the format of the displayEquation arr or else it breaks subsequent calculations
+                    const resultString = String(result);
+                    for (const numChar of resultString) {
+                        displayEquation.push(numChar);
+                    }
+                    button.addEventListener("click", () => {
+
+                        const result = operate(displayEquation);
+                        if (isNaN(result)) {
+                            // TODO: handle error case, maybe display error function
+                        } else {
+                            // Updating the display for result
+                            displayEquation.length = 0;
+
+                            // match the format of the displayEquation arr or else it breaks subsequent calculations
+                            const resultString = String(result);
+                            for (const numChar of resultString) {
+                                displayEquation.push(numChar);
+                            }
+
+                            // Store for subsequent calculations that may need it
+                            prevResult = result;
+                        }
+
+                        drawDisplay(display);
+                    });
+                    // Store for subsequent calculations that may need it
+                    prevResult = result;
+                }
+
+                drawDisplay(display);
+            });
         }
     }
 
