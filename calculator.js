@@ -33,6 +33,7 @@ function isDigit(char) {
 
 /**
  * Helper Function: Verifies if a character is an operator syntax symbol, not ui symbol.
+ * All BACKEND functions should be using this to check for an operator.
  * @return true if operator, otherwise false
  */
 function isOperator(char) {
@@ -137,18 +138,37 @@ function equationToString(arr) {
 
 
 /**
- * Takes in an array of an equation in the form of reverse postfix and returns a result
+ * Calculates an equation presented in reverse postfix form.
+ * Operators are processed with two operands at a time
+ * @param {char|number[]} postfixQueue an equation array containing numbers as operands and operator characters.
+ * @return {number} the result of the subsequent equation.
  */
-export function evalEquation(arr) {
+function evalEquation(postfixQueue) {
     let resultStack = [];
 
-    for (let symbol of arr) {
-        if (isDigit(symbol) || symbol === ".") {
-            resultStack.push(symbol);
+    for (let symbol of postfixQueue) {
+        if (isOperator(symbol)) {
+            // Operator encountered, process most recent 2 operands of the stack with it.
+            // b is popped first due to the nature of the stack
+            let b = resultStack.pop();
+            let a = resultStack.pop();
+            if (b === undefined || a === undefined) {
+                console.log("evalEquation: operand undefined");
+                continue;
+            }
+
+            // Operation calls the function associated with this particular symbol
+            let result = operation[symbol](a, b);
+
+            // Needs to go back in the stack for subsequent calculations with other operators
+            resultStack.push(result);
         } else {
-            // Operator encountered, process it
+            // Operand or digit, accumulate operands in stack
+            resultStack.push(symbol);
         }
     }
+
+    return resultStack.pop(); // Should be a singular number
 }
 
 /**
@@ -156,6 +176,7 @@ export function evalEquation(arr) {
  * This function assumes addSymbol has parsed VALID equations!
  * Uses the Shunting yard algorithm
  * @param {string[]} equationArr the equation stored as a string token array.
+ * @return {number} result of the inputted equationArr
  */
 function operate(equationArr) {
     console.log(equationArr);
@@ -180,9 +201,10 @@ function operate(equationArr) {
             curNumString += token;
 
             // Operators and symbols deliminate the number, indicates when we finish building
-            if (equationArr[i + 1] in operatorSymbol || i === equationArr.length - 1) {
+            if (isOperator(equationArr[i + 1]) || i === equationArr.length - 1) {
                 let curNum = Number(curNumString);
                 if (isNaN(curNum)) {
+                    // [DISPLAY-ERROR] insert Display error function here
                     console.log("ERROR. Number failed to process\n");
                     continue;
                 }
@@ -194,10 +216,8 @@ function operate(equationArr) {
             /* Continue popping into output until the highest precedence op is at top of stack
             *  Each loop, the highest precedence op should always be at the top of the opStack.
             *  (precedence[opStack[opStack.length - 1]] >= precedence[token]) condition checks this */
-            while (
-                opStack.length > 0 &&
-                precedence[opStack[opStack.length - 1]] >= precedence[token]
-                ) {
+            while (opStack.length > 0 &&
+            precedence[opStack[opStack.length - 1]] >= precedence[token]) {
                 outputQueue.push(opStack.pop());
             }
 
@@ -207,9 +227,31 @@ function operate(equationArr) {
 
     console.log(outputQueue);
     console.log(opStack);
-    // ORDER STEP: Order the operators according to precedence
+    // CLEANUP/ORDER STEP: add back remaining operators into the queue
+    // After this, every operator immediately follows the two operands it applies to
+    while (opStack.length > 0) {
+        outputQueue.push(opStack.pop());
+    }
+
+    console.log(outputQueue);
 
     // EVALUATE STEP: process the output queue, as a postfix expression
+    const result = evalEquation(outputQueue);
+    if (isNaN(result)) {
+        // [DISPLAY-ERROR] insert Display error function here
+        return NaN;
+    }
+    console.log(`result: ${result}`);
+
+    return result;
+}
+
+/**
+ * Updates the result and previous result based on a calculation.
+ * @param newResult
+ */
+function updateResult(newResult) {
+
 }
 
 /**
@@ -261,8 +303,7 @@ function main() {
     // Finally the evaluate button
     const equalsButton = document.querySelector("#equals");
     equalsButton.addEventListener("click", () =>{
-       operate(displayEquation);
-       drawDisplay(display);
+
     });
 }
 
