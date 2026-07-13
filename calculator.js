@@ -3,17 +3,13 @@
 import { operation } from "./operations.js"
 
 // OPERATORS object: Holds symbol and actual functional symbol assignment
+// ALL UI USES SYMBOLS: ALL FUNCTION CALLS PARSE SYNTAX VALS
 const operatorSymbol = {
     "÷": "/",
     "×": "*",
     "+": "+",
     "-": "-"
 };
-
-/** Stores the previous result. NO previous result is always null */
-let prevResult = null;
-/** Decimal entered flag. Resets after each operator entered */
-let decimalEntered = false;
 
 /**
  * Container which holds the current equation shown in the display
@@ -22,12 +18,36 @@ let decimalEntered = false;
 const displayEquation = [];
 const display = document.querySelector("#display-container");
 
+/** Stores the previous result. NO previous result is always null */
+let prevResult = null;
+/** Decimal entered flag. Resets after each operator entered */
+let decimalEntered = false;
+
 /**
- * Helper Function: Verifies if a character is a digit or not
+ * Helper Function: Verifies if a character is a digit or not. Uses regex
  * @return true if digit, otherwise false
  */
 function isDigit(char) {
     return /^\d$/.test(char);
+}
+
+/**
+ * Helper Function: Verifies if a character is an operator syntax symbol, not ui symbol.
+ * @return true if operator, otherwise false
+ */
+function isOperator(char) {
+    return Object.values(operatorSymbol).includes(char);
+}
+
+/**
+ * Helper function: verifies if a character is a unary operator
+ * @param prev character token preceding the one to be checked
+ * @return true if unary, otherwise false
+ */
+function isUnary(prev) {
+    return prev === undefined || // start of expression
+        prev === '(' ||
+        (prev in operatorSymbol); // previous token was an operator
 }
 
 /**
@@ -65,6 +85,7 @@ function addSymbol(symbol) {
         actualSymbol = operatorSymbol[symbol] ?? symbol;
 
         /* OPERATOR BRANCH: Consecutive operation symbols cannot be entered. */
+        // This is a simple check against the KEY for the object, not the actual parsing symbol.
         if (symbol in operatorSymbol) {
             decimalEntered = false; // Operators separate numbers, we can enter a new decimal
             if (!prevDigit) {
@@ -114,20 +135,81 @@ function equationToString(arr) {
     return equation;
 }
 
+
+/**
+ * Takes in an array of an equation in the form of reverse postfix and returns a result
+ */
+export function evalEquation(arr) {
+    let resultStack = [];
+
+    for (let symbol of arr) {
+        if (isDigit(symbol) || symbol === ".") {
+            resultStack.push(symbol);
+        } else {
+            // Operator encountered, process it
+        }
+    }
+}
+
 /**
  * Associated with equals button (=). Processes the current equation on the display.
  * This function assumes addSymbol has parsed VALID equations!
- * Check out the shunting yard algorithm (thanks Djikstra)
+ * Uses the Shunting yard algorithm
+ * @param {string[]} equationArr the equation stored as a string token array.
  */
-function operate() {
-    let outputQueue = "";
-    let operatorStack = [];
+function operate(equationArr) {
+    console.log(equationArr);
+    /* higher value means HIGHER PRECEDENCE ! */
+    let precedence = {
+        "+": 1,
+        "-": 1,
+        "/": 2,
+        "*": 2
+    };
 
-    for (let i = 0; i < displayEquation.length; i++) {
-        let curSymbol = displayEquation[i];
+    let outputQueue = [];
+    let opStack = [];
+
+    let curNumString = "";
+    // TOKENIZE STEP: decimals need to be parsed as one to be cleanly read,
+    for (let i = 0; i < equationArr.length; i++) {
+        let token = equationArr[i];
+
+        if (isDigit(token) || token === ".") {
+            // Build the exact number.
+            curNumString += token;
+
+            // Operators and symbols deliminate the number, indicates when we finish building
+            if (equationArr[i + 1] in operatorSymbol || i === equationArr.length - 1) {
+                let curNum = Number(curNumString);
+                if (isNaN(curNum)) {
+                    console.log("ERROR. Number failed to process\n");
+                    continue;
+                }
+                outputQueue.push(curNum);
+                curNumString = ""; // Reset the number parse
+            }
+        } else {
+            // NaN branch, push directly to operators. Here we EVALUATE PRECEDENCE
+            /* Continue popping into output until the highest precedence op is at top of stack
+            *  Each loop, the highest precedence op should always be at the top of the opStack.
+            *  (precedence[opStack[opStack.length - 1]] >= precedence[token]) condition checks this */
+            while (
+                opStack.length > 0 &&
+                precedence[opStack[opStack.length - 1]] >= precedence[token]
+                ) {
+                outputQueue.push(opStack.pop());
+            }
+
+            opStack.push(token);
+        }
     }
 
+    console.log(outputQueue);
+    console.log(opStack);
+    // ORDER STEP: Order the operators according to precedence
 
+    // EVALUATE STEP: process the output queue, as a postfix expression
 }
 
 /**
@@ -175,6 +257,13 @@ function main() {
             drawDisplay(display);
         })
     }
+
+    // Finally the evaluate button
+    const equalsButton = document.querySelector("#equals");
+    equalsButton.addEventListener("click", () =>{
+       operate(displayEquation);
+       drawDisplay(display);
+    });
 }
 
 main();
