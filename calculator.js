@@ -261,13 +261,13 @@ function main() {
                 drawDisplay(display);
             });
         } else {
-            // The equals button performs the operate function.
+            /** Equals Button, Evaluates an expression */
             button.addEventListener("click", () => {
 
                 const result = operate(displayEquation);
                 if (isNaN(result)) {
                     // TODO: handle error case, maybe display error function
-                } else {
+                }   else {
                     // Updating the display for result
                     displayEquation.length = 0;
 
@@ -276,27 +276,7 @@ function main() {
                     for (const numChar of resultString) {
                         displayEquation.push(numChar);
                     }
-                    button.addEventListener("click", () => {
 
-                        const result = operate(displayEquation);
-                        if (isNaN(result)) {
-                            // TODO: handle error case, maybe display error function
-                        } else {
-                            // Updating the display for result
-                            displayEquation.length = 0;
-
-                            // match the format of the displayEquation arr or else it breaks subsequent calculations
-                            const resultString = String(result);
-                            for (const numChar of resultString) {
-                                displayEquation.push(numChar);
-                            }
-
-                            // Store for subsequent calculations that may need it
-                            prevResult = result;
-                        }
-
-                        drawDisplay(display);
-                    });
                     // Store for subsequent calculations that may need it
                     prevResult = result;
                 }
@@ -326,12 +306,6 @@ function main() {
             drawDisplay(display);
         })
     }
-
-    // Finally the evaluate button
-    const equalsButton = document.querySelector("#equals");
-    equalsButton.addEventListener("click", () =>{
-
-    });
 }
 
 main();
